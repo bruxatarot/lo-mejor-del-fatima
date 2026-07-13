@@ -360,6 +360,8 @@
       <button class="tab" data-vista="asistencia">🙋 Lista de Asistencia <span id="numOnline"></span></button>
       <!-- NUEVA PESTAÑA -->
       <button class="tab" data-vista="salon">🏫 El Salón</button>
+      <!-- NUEVA PESTAÑA PERFIL -->
+      <button class="tab" data-vista="perfil">👤 Mi Perfil</button>
     </nav>
     <main>
       <!-- MURO -->
@@ -398,13 +400,34 @@
         </div>
       </section>
 
-      <!-- NUEVA SECCIÓN: EL SALÓN -->
+      <!-- EL SALÓN -->
       <section class="vista" id="vista-salon">
         <div style="margin-bottom:16px;">
           <h3 style="font-family:'Permanent Marker',cursive; color:var(--bic); font-size:24px;">🪑 El Salón del Fátima</h3>
-          <p style="font-family:'Caveat',cursive; font-size:18px; color:#666;">Haz clic en un pupitre para lanzarle un avión de papel ✈️</p>
+          <p style="font-family:'Caveat',cursive; font-size:18px; color:#666;">Haz clic en un pupitre para lanzarle un avión de papel ✈️ o marcarlo como crush ❤️</p>
         </div>
         <div id="salonGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:16px;"></div>
+      </section>
+
+      <!-- PERFIL (FASE B) -->
+      <section class="vista" id="vista-perfil">
+        <div style="margin-bottom:20px;">
+          <h3 style="font-family:'Permanent Marker',cursive; color:var(--bic); font-size:26px;">👤 Mi Perfil</h3>
+        </div>
+
+        <div id="perfilInfo" style="background:#fff; border:2px solid var(--tinta); padding:16px; border-radius:12px; margin-bottom:20px; box-shadow:var(--sombra);">
+          <!-- Se llena por JS -->
+        </div>
+
+        <div style="margin-bottom:24px;">
+          <h4 style="font-family:'Permanent Marker',cursive; color:var(--fucsia); font-size:20px; margin-bottom:8px;">✈️ Aviones que me han lanzado</h4>
+          <div id="avionesRecibidos" style="display:flex; flex-direction:column; gap:10px;"></div>
+        </div>
+
+        <div>
+          <h4 style="font-family:'Permanent Marker',cursive; color:var(--fucsia); font-size:20px; margin-bottom:8px;">❤️ Crushes de la clase (quién te tiene como crush)</h4>
+          <div id="crushesRecibidos" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
       </section>
     </main>
   </div>
@@ -453,7 +476,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, doc, setDoc, addDoc, deleteDoc, updateDoc,
-  onSnapshot, query, orderBy, limit, serverTimestamp
+  onSnapshot, query, orderBy, limit, serverTimestamp, where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const $ = id => document.getElementById(id);
@@ -476,7 +499,7 @@ let chatVisto = true;
 let alumnosCache = [];
 let miEmoji = "🐒";
 
-const esc = s => (s||"").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = s => (s||"").replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
 
 const EMOJIS = ["🐒","❤️","⭐","🔥","🦋","🍕","🦄","🌵","👑","🦖","🍓","⚡"];
 
@@ -612,6 +635,9 @@ document.querySelectorAll(".tab").forEach(t => {
     if (t.dataset.vista === "salon") {
       renderSalon();
     }
+    if (t.dataset.vista === "perfil") {
+      renderPerfil();
+    }
   };
 });
 
@@ -642,7 +668,7 @@ function pintarAsistencia(){
       <span class="presente">${a.online ? '¡Presente! 🙋' : 'ausente...'}</span>
     </div>`).join("") || '<div class="vacio">nadie se ha inscrito todavía 🦗</div>';
   
-  renderSalon(); // Actualiza el salón también
+  renderSalon();
 }
 
 function escucharUsuarios(){
@@ -665,9 +691,9 @@ function escucharUsuarios(){
   setInterval(pintarAsistencia, 30000);
 }
 
-/* ================== POSTS (sin cambios mayores) ================== */
+/* ================== POSTS ================== */
 let fotoBase64 = null;
-$("postFoto").onchange = e => { /* mismo código original de compresión */ 
+$("postFoto").onchange = e => {
   const f = e.target.files[0];
   if (!f) return;
   const img = new Image();
@@ -727,7 +753,7 @@ function fechaBonita(ts){
   return f.toLocaleDateString("es-VE",{day:"numeric",month:"short"}) + " · " + f.toLocaleTimeString("es-VE",{hour:"2-digit",minute:"2-digit"});
 }
 
-function escucharPosts(){ /* mismo código original */ 
+function escucharPosts(){
   if (unsubPosts) unsubPosts();
   const q = query(collection(db,"posts"), orderBy("creado","desc"), limit(60));
   unsubPosts = onSnapshot(q, snap => {
@@ -777,13 +803,13 @@ async function reir(id){
   if (snapBtn) snapBtn.disabled = false;
 }
 
-/* ================== CHAT (sin cambios mayores) ================== */
-function escucharChat(){ /* mismo código original */ }
-async function enviarNotita(){ /* mismo código original */ }
+/* ================== CHAT ================== */
+function escucharChat(){}
+async function enviarNotita(){}
 $("btnChat").onclick = enviarNotita;
 $("chatInput").addEventListener("keydown", e => { if (e.key === "Enter") enviarNotita(); });
 
-/* ================== EL SALÓN + AVIONES (NUEVO - FASE A) ================== */
+/* ================== EL SALÓN + AVIONES + CRUSH (FASE A + B) ================== */
 function renderSalon() {
   const grid = $("salonGrid");
   if (!grid) return;
@@ -792,7 +818,7 @@ function renderSalon() {
   alumnosCache.forEach(alumno => {
     const isMe = alumno.id === yo?.uid;
     const card = document.createElement("div");
-    card.style.cssText = `background:#fff; border:2px solid var(--tinta); border-radius:12px; padding:14px; text-align:center; box-shadow:var(--sombra); cursor:${isMe ? 'default' : 'pointer'}; position:relative; transform:${isMe ? 'rotate(-1deg)' : 'rotate(0.5deg)'};`;
+    card.style.cssText = `background:#fff; border:2px solid var(--tinta); border-radius:12px; padding:14px; text-align:center; box-shadow:var(--sombra); position:relative; transform:${isMe ? 'rotate(-1deg)' : 'rotate(0.5deg)'};`;
 
     card.innerHTML = `
       <div style="font-size:48px; margin-bottom:8px;">${alumno.emoji || "🐒"}</div>
@@ -804,7 +830,21 @@ function renderSalon() {
     `;
 
     if (!isMe) {
-      card.onclick = () => lanzarAvion(alumno);
+      // Botón avión
+      const btnAvion = document.createElement("button");
+      btnAvion.textContent = "✈️ Lanzar avión";
+      btnAvion.style.cssText = "margin-top:8px; font-size:13px; padding:4px 10px; border:1.5px solid var(--tinta); background:#fff; border-radius:8px; cursor:pointer;";
+      btnAvion.onclick = (e) => { e.stopImmediatePropagation(); lanzarAvion(alumno); };
+      card.appendChild(btnAvion);
+
+      // NUEVO Botón crush
+      const btnCrush = document.createElement("button");
+      btnCrush.textContent = "❤️ Marcar crush";
+      btnCrush.style.cssText = "margin-top:6px; font-size:13px; padding:4px 10px; border:1.5px solid var(--fucsia); background:#fff; border-radius:8px; cursor:pointer; color:var(--fucsia);";
+      btnCrush.onclick = (e) => { e.stopImmediatePropagation(); marcarComoCrush(alumno); };
+      card.appendChild(btnCrush);
+
+      card.style.cursor = "pointer";
     } else {
       card.style.border = "3px solid var(--turquesa)";
       card.innerHTML += `<div style="position:absolute; top:-8px; right:-8px; background:var(--resaltador); font-size:11px; padding:1px 6px; border-radius:6px;">TU PUPITRE</div>`;
@@ -833,6 +873,111 @@ async function lanzarAvion(destinatario) {
   } catch (e) {
     alert("No se pudo lanzar el avión: " + e.message);
   }
+}
+
+async function marcarComoCrush(destinatario) {
+  if (!confirm(`¿Marcar a ${destinatario.apodo} como crush de la clase? ❤️`)) return;
+
+  try {
+    await addDoc(collection(db, "crushes"), {
+      fromUid: yo.uid,
+      fromApodo: yo.displayName || "???",
+      toUid: destinatario.id,
+      toApodo: destinatario.apodo,
+      creado: serverTimestamp()
+    });
+    alert(`¡${destinatario.apodo} ahora sabe que lo/la tienes como crush! ❤️`);
+  } catch (e) {
+    alert("No se pudo marcar el crush: " + e.message);
+  }
+}
+
+/* ================== PERFIL (FASE B) ================== */
+function renderPerfil() {
+  if (!yo) return;
+
+  const infoDiv = $("perfilInfo");
+  const miData = alumnosCache.find(a => a.id === yo.uid) || {};
+
+  infoDiv.innerHTML = `
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div style="font-size:64px;">${miData.emoji || miEmoji || "🐒"}</div>
+      <div>
+        <div style="font-family:'Permanent Marker',cursive; font-size:24px;">${esc(yo.displayName || "Sin apodo")}</div>
+        <div style="color:#666;">${esc(miData.pais || "🌍 por ahí")}</div>
+      </div>
+    </div>
+  `;
+
+  cargarAvionesRecibidos();
+  cargarCrushesRecibidos();
+}
+
+function cargarAvionesRecibidos() {
+  const container = $("avionesRecibidos");
+  container.innerHTML = '<div class="cargando" style="padding:20px; font-size:18px;">Cargando aviones...</div>';
+
+  const q = query(
+    collection(db, "aviones"),
+    where("toUid", "==", yo.uid),
+    orderBy("creado", "desc"),
+    limit(30)
+  );
+
+  onSnapshot(q, snap => {
+    if (snap.empty) {
+      container.innerHTML = '<div class="vacio" style="padding:20px; font-size:18px;">Nadie te ha lanzado avión todavía ✈️</div>';
+      return;
+    }
+
+    let html = "";
+    snap.forEach(d => {
+      const a = d.data();
+      html += `
+        <div style="background:#fff; border:2px solid var(--tinta); padding:12px 16px; border-radius:10px; box-shadow:var(--sombra);">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+            <span style="font-size:24px;">${a.fromEmoji || "🐒"}</span>
+            <strong style="font-family:'Permanent Marker',cursive;">${esc(a.fromApodo)}</strong>
+            <span style="margin-left:auto; font-size:13px; color:#888;">${fechaBonita(a.creado)}</span>
+          </div>
+          ${a.mensaje ? `<div style="font-size:18px; padding-left:34px;">${esc(a.mensaje)}</div>` : '<div style="padding-left:34px; color:#888; font-style:italic;">(sin mensaje)</div>'}
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  });
+}
+
+function cargarCrushesRecibidos() {
+  const container = $("crushesRecibidos");
+  container.innerHTML = '<div class="cargando" style="padding:20px; font-size:18px;">Cargando crushes...</div>';
+
+  const q = query(
+    collection(db, "crushes"),
+    where("toUid", "==", yo.uid),
+    orderBy("creado", "desc"),
+    limit(20)
+  );
+
+  onSnapshot(q, snap => {
+    if (snap.empty) {
+      container.innerHTML = '<div class="vacio" style="padding:20px; font-size:18px;">Nadie te ha marcado como crush todavía ❤️</div>';
+      return;
+    }
+
+    let html = "";
+    snap.forEach(d => {
+      const c = d.data();
+      html += `
+        <div style="background:#fff; border:2px solid var(--fucsia); padding:10px 14px; border-radius:10px; display:flex; align-items:center; gap:10px;">
+          <span style="font-size:22px;">❤️</span>
+          <strong>${esc(c.fromApodo)}</strong>
+          <span style="margin-left:auto; font-size:13px; color:#888;">${fechaBonita(c.creado)}</span>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  });
 }
 
 /* ================== FASTIDIOSITO ================== */
