@@ -337,6 +337,9 @@
     </div>
   </header>
 
+  <!-- Pantalla de arranque: se quita sola cuando Firebase responde -->
+  <div id="arranque" class="cargando" style="padding:80px 30px">abriendo el salón... 🎒</div>
+
   <!-- ============ VISTA AUTH ============ -->
   <div id="vistaAuth" style="display:none">
     <div class="inscripcion">
@@ -423,6 +426,27 @@
   <span id="monoTexto"></span>
 </div>
 
+<script>
+/* Vigilante: si en 8 segundos Firebase no respondió, avisa qué revisar */
+window.__salonListo = false;
+window.addEventListener("error", function(e){
+  var a = document.getElementById("arranque");
+  if (a && !window.__salonListo) {
+    a.innerHTML = "😖 Algo se dañó al arrancar:<br><b style='font-size:18px;font-family:monospace'>" +
+      (e.message || "error desconocido") + "</b><br><br>Mándale pantallazo de esto a Claude.";
+  }
+});
+setTimeout(function(){
+  var a = document.getElementById("arranque");
+  if (a && !window.__salonListo && a.style.display !== "none") {
+    a.innerHTML = "🐒 Mmm... Firebase no respondió. Revisa:<br><br>" +
+      "1️⃣ ¿Tienes internet? (el mono pregunta en serio)<br>" +
+      "2️⃣ ¿Estás abriendo la página desde la URL de GitHub Pages y no con doble clic al archivo?<br>" +
+      "3️⃣ ¿Creaste la base de datos Firestore en Firebase?<br><br>" +
+      "Abre la consola del navegador (F12 → Console) y mándale pantallazo del error rojo a Claude.";
+  }
+}, 8000);
+</script>
 <script type="module">
 /* ================================================================
    ⚙️ CONFIGURACIÓN — LO ÚNICO QUE TIENES QUE TOCAR, BRUXA
@@ -527,6 +551,8 @@ $("btnSalir").onclick = async () => {
 };
 
 onAuthStateChanged(auth, user => {
+  window.__salonListo = true;
+  $("arranque").style.display = "none";
   yo = user;
   if (user) {
     soyAdmin = ADMIN_EMAILS.map(e=>e.toLowerCase()).includes((user.email||"").toLowerCase());
