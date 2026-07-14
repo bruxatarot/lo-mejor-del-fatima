@@ -374,7 +374,7 @@ const ADMIN_EMAILS = ["bruxatarot@gmail.com"];
 </script>
 
 <script type="module">
-import { DEF, darken, buildAvatarSVG, buildPupitreHTML, POSICIONES } from "./estudiantes.js";
+import { DEF, darken, buildAvatarSVG, buildPupitreHTML, POSICIONES } from "./estudiantes.js?v=2";
 const $ = id => document.getElementById(id);
 
 /* ===== CARGAR FIREBASE ===== */
@@ -513,14 +513,16 @@ function animarAvion(target){
 /* ===== AVIONES RECIBIDOS ===== */
 function escucharAviones(){
   if(unsubAviones) unsubAviones();
-  const {query,collection,where,orderBy,onSnapshot,deleteDoc,doc} = _firebase;
-  const q = query(collection(db,"aviones"),
-    where("para","==",yo.uid), orderBy("creado","desc"));
+  const {query,collection,where,onSnapshot,deleteDoc,doc} = _firebase;
+  // sin orderBy: se ordena aquí mismo para no necesitar índice compuesto en Firestore
+  const q = query(collection(db,"aviones"), where("para","==",yo.uid));
   unsubAviones = onSnapshot(q, snap=>{
     const d = $("misAviones");
     if(snap.empty){ d.innerHTML='<em style="color:#aaa;font-size:15px">ninguno todavía... ✉️</em>'; return; }
+    const docs = snap.docs.slice().sort((a,b)=>
+      (b.data().creado?.toMillis?.()||0) - (a.data().creado?.toMillis?.()||0));
     let html="";
-    snap.forEach(doc2=>{
+    docs.forEach(doc2=>{
       const a=doc2.data();
       html+=`<div class="avion-item">
         <button class="borrar-x" data-id="${doc2.id}">✖</button>
@@ -531,6 +533,8 @@ function escucharAviones(){
     });
     d.innerHTML=html;
     d.querySelectorAll(".borrar-x").forEach(b=>b.onclick=()=>deleteDoc(doc(db,"aviones",b.dataset.id)));
+  }, err=>{
+    $("misAviones").innerHTML = `<em style="color:var(--margen);font-size:14px">😖 error cargando aviones: ${err.code||err.message}</em>`;
   });
 }
 
@@ -557,6 +561,8 @@ function escucharUsuarios(){
     alumnosCache.sort((a,b)=>b.t-a.t);
     pintarSalon();
     pintarListaOnline();
+  }, err=>{
+    $("listaOnline").innerHTML = `<em style="color:var(--margen);font-size:14px">😖 error: ${err.code||err.message}</em>`;
   });
   setInterval(()=>{ pintarSalon(); pintarListaOnline(); }, 30000);
 }
