@@ -429,9 +429,11 @@ function pintarSalon(){
     const el = wrap.firstElementChild;
     el.style.left = pos.x + "px";
     el.style.top  = pos.y + "px";
-    if(!dormido && a.uid !== yo?.uid){
+    if(a.uid !== yo?.uid){
       el.onclick = () => abrirModalAvion(a);
-      el.title = `¡Lanzarle un avión a ${a.apodo}! ✈️`;
+      el.title = dormido
+        ? `${a.apodo} está ausente — déjale el avión en su pupitre 💤✈️`
+        : `¡Lanzarle un avión a ${a.apodo}! ✈️`;
     }
     canvas.appendChild(el);
   });
