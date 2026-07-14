@@ -39,35 +39,57 @@ export function buildAvatarSVG(a, w=120, h=160, animado=false){
   const es = a.sexo === "ella";
   const id = Math.random().toString(36).slice(2);
 
-  // cabello paths
+  // cabello paths — nace pegado a la cara y cubre bien la corona
   let cabellos = "";
-  const cw = w*.38, cx = w/2, cy = h*.22;
+  const cx = w/2, cy = h*.22;
+  const faceR0 = w*.34;              // radio de la cara (igual que abajo)
+  const topPelo = cy - h*.055;       // qué tan arriba llega el pelo
+  const hw = faceR0*1.12;            // ancho del casquete de pelo
   switch(a.cabello){
     case "corto":
-      cabellos = `<ellipse cx="${cx}" cy="${cy-.5}" rx="${cw*.9}" ry="${cw*.55}" fill="${pelo}"/>`;
+      // casquete que cubre corona + frente ligera + patillas cortas
+      cabellos = `<path d="M${cx-hw},${cy+h*.06}
+        Q${cx-hw},${topPelo} ${cx},${topPelo}
+        Q${cx+hw},${topPelo} ${cx+hw},${cy+h*.06}
+        Q${cx+hw*.7},${cy+h*.02} ${cx+hw*.55},${cy+h*.05}
+        Q${cx},${cy-h*.02} ${cx-hw*.55},${cy+h*.05}
+        Q${cx-hw*.7},${cy+h*.02} ${cx-hw},${cy+h*.06} Z" fill="${pelo}"/>`;
       break;
     case "medio":
-      cabellos = `<ellipse cx="${cx}" cy="${cy}" rx="${cw*.95}" ry="${cw*.6}" fill="${pelo}"/>
-      <rect x="${cx-cw*.85}" y="${cy}" width="${cw*.4}" height="${h*.12}" rx="4" fill="${pelo}"/>
-      <rect x="${cx+cw*.45}" y="${cy}" width="${cw*.4}" height="${h*.12}" rx="4" fill="${pelo}"/>`;
+      // bob: casquete + caída hasta las mejillas a los lados
+      cabellos = `<path d="M${cx-hw},${cy+h*.05}
+        Q${cx-hw},${topPelo} ${cx},${topPelo}
+        Q${cx+hw},${topPelo} ${cx+hw},${cy+h*.05} Z" fill="${pelo}"/>
+      <path d="M${cx-hw},${cy+h*.02} Q${cx-hw*1.05},${cy+h*.14} ${cx-hw*.85},${cy+h*.2} L${cx-hw*.5},${cy+h*.18} Q${cx-hw*.72},${cy+h*.08} ${cx-hw*.72},${cy} Z" fill="${pelo}"/>
+      <path d="M${cx+hw},${cy+h*.02} Q${cx+hw*1.05},${cy+h*.14} ${cx+hw*.85},${cy+h*.2} L${cx+hw*.5},${cy+h*.18} Q${cx+hw*.72},${cy+h*.08} ${cx+hw*.72},${cy} Z" fill="${pelo}"/>`;
       break;
     case "largo_liso":
-      cabellos = `<ellipse cx="${cx}" cy="${cy-.5}" rx="${cw*.95}" ry="${cw*.6}" fill="${pelo}"/>
-      <rect x="${cx-cw*.9}" y="${cy}" width="${cw*.42}" height="${h*.32}" rx="5" fill="${pelo}"/>
-      <rect x="${cx+cw*.48}" y="${cy}" width="${cw*.42}" height="${h*.32}" rx="5" fill="${pelo}"/>`;
+      cabellos = `<path d="M${cx-hw},${cy+h*.05}
+        Q${cx-hw},${topPelo} ${cx},${topPelo}
+        Q${cx+hw},${topPelo} ${cx+hw},${cy+h*.05} Z" fill="${pelo}"/>
+      <path d="M${cx-hw},${cy} Q${cx-hw*1.05},${cy+h*.2} ${cx-hw*.82},${cy+h*.36} L${cx-hw*.42},${cy+h*.34} Q${cx-hw*.6},${cy+h*.12} ${cx-hw*.6},${cy-h*.02} Z" fill="${pelo}"/>
+      <path d="M${cx+hw},${cy} Q${cx+hw*1.05},${cy+h*.2} ${cx+hw*.82},${cy+h*.36} L${cx+hw*.42},${cy+h*.34} Q${cx+hw*.6},${cy+h*.12} ${cx+hw*.6},${cy-h*.02} Z" fill="${pelo}"/>`;
       break;
     case "largo_ondulado":
-      cabellos = `<ellipse cx="${cx}" cy="${cy-.5}" rx="${cw*.95}" ry="${cw*.6}" fill="${pelo}"/>
-      <path d="M${cx-cw*.85},${cy+h*.04} Q${cx-cw*1.1},${cy+h*.14} ${cx-cw*.85},${cy+h*.22} Q${cx-cw*1.05},${cy+h*.28} ${cx-cw*.8},${cy+h*.35}" stroke="${pelo}" stroke-width="${w*.085}" fill="none" stroke-linecap="round"/>
-      <path d="M${cx+cw*.85},${cy+h*.04} Q${cx+cw*1.1},${cy+h*.14} ${cx+cw*.85},${cy+h*.22} Q${cx+cw*1.05},${cy+h*.28} ${cx+cw*.8},${cy+h*.35}" stroke="${pelo}" stroke-width="${w*.085}" fill="none" stroke-linecap="round"/>`;
+      cabellos = `<path d="M${cx-hw},${cy+h*.05}
+        Q${cx-hw},${topPelo} ${cx},${topPelo}
+        Q${cx+hw},${topPelo} ${cx+hw},${cy+h*.05} Z" fill="${pelo}"/>
+      <path d="M${cx-hw*.95},${cy+h*.02} Q${cx-hw*1.18},${cy+h*.14} ${cx-hw*.92},${cy+h*.24} Q${cx-hw*1.12},${cy+h*.3} ${cx-hw*.86},${cy+h*.38} L${cx-hw*.45},${cy+h*.34} Q${cx-hw*.6},${cy+h*.14} ${cx-hw*.6},${cy} Z" fill="${pelo}"/>
+      <path d="M${cx+hw*.95},${cy+h*.02} Q${cx+hw*1.18},${cy+h*.14} ${cx+hw*.92},${cy+h*.24} Q${cx+hw*1.12},${cy+h*.3} ${cx+hw*.86},${cy+h*.38} L${cx+hw*.45},${cy+h*.34} Q${cx+hw*.6},${cy+h*.14} ${cx+hw*.6},${cy} Z" fill="${pelo}"/>`;
       break;
     case "afro":
-      cabellos = `<circle cx="${cx}" cy="${cy-h*.04}" r="${cw*1.05}" fill="${pelo}"/>`;
+      cabellos = `<circle cx="${cx}" cy="${cy-h*.01}" r="${faceR0*1.25}" fill="${pelo}"/>`;
       break;
     case "trenzas":
-      cabellos = `<ellipse cx="${cx}" cy="${cy-.5}" rx="${cw*.95}" ry="${cw*.6}" fill="${pelo}"/>
-      <rect x="${cx-cw*.15}" y="${cy+h*.04}" width="${cw*.12}" height="${h*.38}" rx="4" fill="${pelo}"/>
-      <rect x="${cx+cw*.03}" y="${cy+h*.04}" width="${cw*.12}" height="${h*.38}" rx="4" fill="${pelo}"/>`;
+      cabellos = `<path d="M${cx-hw},${cy+h*.05}
+        Q${cx-hw},${topPelo} ${cx},${topPelo}
+        Q${cx+hw},${topPelo} ${cx+hw},${cy+h*.05} Z" fill="${pelo}"/>
+      <path d="M${cx-hw},${cy+h*.01} Q${cx-hw*1.02},${cy+h*.12} ${cx-hw*.88},${cy+h*.18} L${cx-hw*.62},${cy+h*.15} Q${cx-hw*.72},${cy+h*.06} ${cx-hw*.72},${cy-h*.01} Z" fill="${pelo}"/>
+      <path d="M${cx+hw},${cy+h*.01} Q${cx+hw*1.02},${cy+h*.12} ${cx+hw*.88},${cy+h*.18} L${cx+hw*.62},${cy+h*.15} Q${cx+hw*.72},${cy+h*.06} ${cx+hw*.72},${cy-h*.01} Z" fill="${pelo}"/>
+      <rect x="${cx-hw*.92}" y="${cy+h*.14}" width="${hw*.16}" height="${h*.32}" rx="4" fill="${pelo}"/>
+      <rect x="${cx+hw*.76}" y="${cy+h*.14}" width="${hw*.16}" height="${h*.32}" rx="4" fill="${pelo}"/>
+      <circle cx="${cx-hw*.84}" cy="${cy+h*.47}" r="${w*.03}" fill="${darken(pelo,.7)}"/>
+      <circle cx="${cx+hw*.84}" cy="${cy+h*.47}" r="${w*.03}" fill="${darken(pelo,.7)}"/>`;
       break;
     case "calvo": cabellos=""; break;
   }
@@ -126,6 +148,17 @@ export function buildAvatarSVG(a, w=120, h=160, animado=false){
     .ojo_${id}{animation:blink_${id} 4s ${Math.random()*2}s infinite;transform-origin:center;}
   ` : "";
 
+  // flequillo delantero: cubre la frente por encima de la cara (menos calvo/afro)
+  let flequillo = "";
+  if(a.cabello !== "calvo" && a.cabello !== "afro"){
+    flequillo = `<path d="M${cx-faceR0*.98},${cy+h*.02}
+      Q${cx-faceR0*.5},${cy-h*.02} ${cx},${cy+h*.01}
+      Q${cx+faceR0*.5},${cy-h*.02} ${cx+faceR0*.98},${cy+h*.02}
+      Q${cx+faceR0*.6},${cy+h*.05} ${cx+faceR0*.25},${cy+h*.035}
+      Q${cx},${cy+h*.06} ${cx-faceR0*.25},${cy+h*.035}
+      Q${cx-faceR0*.6},${cy+h*.05} ${cx-faceR0*.98},${cy+h*.02} Z" fill="${pelo}"/>`;
+  }
+
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
   ${animado ? `<style>${animCSS}</style>` : ""}
   <!-- cabello trasero -->
@@ -134,6 +167,8 @@ export function buildAvatarSVG(a, w=120, h=160, animado=false){
   <rect x="${cx-w*.08}" y="${faceY+h*.18}" width="${w*.16}" height="${h*.1}" rx="4" fill="${pd}"/>
   <!-- cara -->
   <ellipse cx="${cx}" cy="${faceY}" rx="${faceR}" ry="${faceR*1.1}" fill="${p}" stroke="${pd}" stroke-width="1.5"/>
+  <!-- flequillo delantero (cubre la frente) -->
+  ${flequillo}
   <!-- cejas -->
   <path d="M${ox-er*1.2},${oy-er*2.2} Q${ox},${oy-er*2.8} ${ox+er*1.2},${oy-er*2.2}" stroke="${darken(pelo,.8)}" stroke-width="${w*.025}" fill="none" stroke-linecap="round"/>
   <path d="M${ox2-er*1.2},${oy-er*2.2} Q${ox2},${oy-er*2.8} ${ox2+er*1.2},${oy-er*2.2}" stroke="${darken(pelo,.8)}" stroke-width="${w*.025}" fill="none" stroke-linecap="round"/>
