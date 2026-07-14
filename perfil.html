@@ -324,7 +324,7 @@ async function cargarFirebase(){
       import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"),
       import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js")
     ]);
-    const app = fa.initializeApp(FIREBASE_CONFIG, "perfil");
+    const app = fa.initializeApp(FIREBASE_CONFIG);
     auth = fb.getAuth(app);
     db   = fc.getFirestore(app);
     _fb  = {...fb,...fc};
