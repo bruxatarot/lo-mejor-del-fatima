@@ -621,7 +621,11 @@ async function arrancar(){
     [unsubPosts, unsubChat, unsubUsers].forEach(u => u && u());
     unsubPosts = unsubChat = unsubUsers = null;
   }
-});
+  });
+} // fin arrancar()
+
+// arrancar la app
+arrancar();
 
 /* ================= TABS ================= */
 document.querySelectorAll(".tab").forEach(t => {
@@ -786,7 +790,6 @@ async function reir(id){
   const snapBtn = document.querySelector(`[data-risa="${id}"]`);
   if (snapBtn) snapBtn.disabled = true;
   try {
-    const { getDoc, arrayUnion, arrayRemove } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
     const ref = doc(db,"posts",id);
     const d = await getDoc(ref);
     const risas = d.data().risas || [];
