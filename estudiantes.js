@@ -148,15 +148,18 @@ export function buildAvatarSVG(a, w=120, h=160, animado=false){
     .ojo_${id}{animation:blink_${id} 4s ${Math.random()*2}s infinite;transform-origin:center;}
   ` : "";
 
-  // flequillo delantero: cubre la frente por encima de la cara (menos calvo/afro)
+  // flequillo delantero: enmarca la frente con caída suave (menos calvo/afro)
   let flequillo = "";
   if(a.cabello !== "calvo" && a.cabello !== "afro"){
-    flequillo = `<path d="M${cx-faceR0*.98},${cy+h*.02}
-      Q${cx-faceR0*.5},${cy-h*.02} ${cx},${cy+h*.01}
-      Q${cx+faceR0*.5},${cy-h*.02} ${cx+faceR0*.98},${cy+h*.02}
-      Q${cx+faceR0*.6},${cy+h*.05} ${cx+faceR0*.25},${cy+h*.035}
-      Q${cx},${cy+h*.06} ${cx-faceR0*.25},${cy+h*.035}
-      Q${cx-faceR0*.6},${cy+h*.05} ${cx-faceR0*.98},${cy+h*.02} Z" fill="${pelo}"/>`;
+    // dos mechones que caen de los lados hacia el centro, dejando la frente parcialmente visible
+    flequillo = `<path d="M${cx-faceR0*.95},${cy-h*.01}
+      Q${cx-faceR0*.9},${cy+h*.05} ${cx-faceR0*.55},${cy+h*.05}
+      Q${cx-faceR0*.3},${cy+h*.008} ${cx-faceR0*.05},${cy+h*.02}
+      Q${cx-faceR0*.4},${cy-h*.03} ${cx-faceR0*.95},${cy-h*.01} Z" fill="${pelo}"/>
+    <path d="M${cx+faceR0*.95},${cy-h*.01}
+      Q${cx+faceR0*.9},${cy+h*.05} ${cx+faceR0*.55},${cy+h*.05}
+      Q${cx+faceR0*.3},${cy+h*.008} ${cx+faceR0*.05},${cy+h*.02}
+      Q${cx+faceR0*.4},${cy-h*.03} ${cx+faceR0*.95},${cy-h*.01} Z" fill="${pelo}"/>`;
   }
 
   return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" xmlns="http://www.w3.org/2000/svg">
@@ -170,8 +173,8 @@ export function buildAvatarSVG(a, w=120, h=160, animado=false){
   <!-- flequillo delantero (cubre la frente) -->
   ${flequillo}
   <!-- cejas -->
-  <path d="M${ox-er*1.2},${oy-er*2.2} Q${ox},${oy-er*2.8} ${ox+er*1.2},${oy-er*2.2}" stroke="${darken(pelo,.8)}" stroke-width="${w*.025}" fill="none" stroke-linecap="round"/>
-  <path d="M${ox2-er*1.2},${oy-er*2.2} Q${ox2},${oy-er*2.8} ${ox2+er*1.2},${oy-er*2.2}" stroke="${darken(pelo,.8)}" stroke-width="${w*.025}" fill="none" stroke-linecap="round"/>
+  <path d="M${ox-er*.95},${oy-er*1.7} Q${ox},${oy-er*2.05} ${ox+er*.95},${oy-er*1.7}" stroke="${darken(pelo,.75)}" stroke-width="${w*.018}" fill="none" stroke-linecap="round"/>
+  <path d="M${ox2-er*.95},${oy-er*1.7} Q${ox2},${oy-er*2.05} ${ox2+er*.95},${oy-er*1.7}" stroke="${darken(pelo,.75)}" stroke-width="${w*.018}" fill="none" stroke-linecap="round"/>
   <!-- ojos -->
   <g class="ojo_${id}">
     <ellipse cx="${ox}" cy="${oy}" rx="${er*1.1}" ry="${er*1.3}" fill="white"/>
