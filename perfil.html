@@ -308,7 +308,7 @@ const ADMIN_EMAILS = ["bruxatarot@gmail.com"];
 </script>
 
 <script type="module">
-import { DEF, darken, buildAvatarSVG, buildPupitreHTML, POSICIONES } from "./estudiantes.js";
+import { DEF, darken, buildAvatarSVG, buildPupitreHTML, POSICIONES } from "./estudiantes.js?v=2";
 const $ = id => document.getElementById(id);
 const esc = s => (s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -371,14 +371,15 @@ function pintarCarnet(userData, email, esAdmin){
 
 /* ===== ESCUCHAR AVIONES RECIBIDOS ===== */
 function escucharAviones(){
-  const {query,collection,where,orderBy,onSnapshot,deleteDoc,doc} = _fb;
+  const {query,collection,where,onSnapshot,deleteDoc,doc} = _fb;
   if(unsubAvRecib) unsubAvRecib();
-  const q = query(collection(db,"aviones"),
-    where("para","==",yo.uid), orderBy("creado","desc"));
+  const q = query(collection(db,"aviones"), where("para","==",yo.uid));
   unsubAvRecib = onSnapshot(q, snap=>{
     const d=$("misAviones");
     if(snap.empty){d.innerHTML='<em style="color:#aaa">ningún avión todavía... ✈️</em>';return;}
-    d.innerHTML=snap.docs.map(doc2=>{
+    const docs = snap.docs.slice().sort((a,b)=>
+      (b.data().creado?.toMillis?.()||0) - (a.data().creado?.toMillis?.()||0));
+    d.innerHTML=docs.map(doc2=>{
       const a=doc2.data();
       return `<div class="avion-item">
         <button class="borrar-x" data-id="${doc2.id}" title="borrar">✖</button>
@@ -389,19 +390,22 @@ function escucharAviones(){
     }).join("");
     d.querySelectorAll(".borrar-x").forEach(b=>b.onclick=()=>
       deleteDoc(doc(db,"aviones",b.dataset.id)));
+  }, err=>{
+    $("misAviones").innerHTML=`<em style="color:var(--margen)">😖 error: ${err.code||err.message}</em>`;
   });
 }
 
 /* ===== ESCUCHAR AVIONES ENVIADOS ===== */
 function escucharEnviados(){
-  const {query,collection,where,orderBy,onSnapshot,deleteDoc,doc} = _fb;
+  const {query,collection,where,onSnapshot,deleteDoc,doc} = _fb;
   if(unsubAvEnv) unsubAvEnv();
-  const q = query(collection(db,"aviones"),
-    where("de","==",yo.uid), orderBy("creado","desc"));
+  const q = query(collection(db,"aviones"), where("de","==",yo.uid));
   unsubAvEnv = onSnapshot(q, snap=>{
     const d=$("misEnviados");
     if(snap.empty){d.innerHTML='<em style="color:#aaa">no has lanzado ninguno todavía 🎯</em>';return;}
-    d.innerHTML=snap.docs.map(doc2=>{
+    const docs = snap.docs.slice().sort((a,b)=>
+      (b.data().creado?.toMillis?.()||0) - (a.data().creado?.toMillis?.()||0));
+    d.innerHTML=docs.map(doc2=>{
       const a=doc2.data();
       return `<div class="avion-item">
         <button class="borrar-x" data-id="${doc2.id}" title="borrar">✖</button>
@@ -412,6 +416,8 @@ function escucharEnviados(){
     }).join("");
     d.querySelectorAll(".borrar-x").forEach(b=>b.onclick=()=>
       deleteDoc(doc(db,"aviones",b.dataset.id)));
+  }, err=>{
+    $("misEnviados").innerHTML=`<em style="color:var(--margen)">😖 error: ${err.code||err.message}</em>`;
   });
 }
 
@@ -448,6 +454,8 @@ function escucharAlumnos(){
       alumnos.push({uid:d.id,...u,t,online:(ahora-t)<70000}); });
     alumnos.sort((a,b)=>a.apodo?.localeCompare(b.apodo||"")||0);
     pintarTabla(alumnos);
+  }, err=>{
+    $("tablaWrap").innerHTML=`<em style="color:var(--margen)">😖 error: ${err.code||err.message}</em>`;
   });
 }
 
